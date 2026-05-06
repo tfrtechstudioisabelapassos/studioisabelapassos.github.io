@@ -2,6 +2,7 @@ const header = document.getElementById("header");
 const menuToggle = document.getElementById("menuToggle");
 const navWrapper = document.getElementById("navMenu");
 const navLinks = document.querySelectorAll(".header .nav-link");
+const navMenuActions = document.querySelectorAll(".header .nav-wrapper a[href^=\"#\"]");
 const sections = [...document.querySelectorAll("main section[id]")];
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -25,7 +26,7 @@ if (menuToggle) {
     menuToggle.addEventListener("click", () => toggleMenu());
 }
 
-navLinks.forEach((link) => {
+navMenuActions.forEach((link) => {
     link.addEventListener("click", () => toggleMenu(false));
 });
 
@@ -166,6 +167,11 @@ const carouselDots = document.getElementById("carouselDots");
 const testimonialCards = testimonialsWrapper ? [...testimonialsWrapper.querySelectorAll(".testimonial-card")] : [];
 let currentSlide = 0;
 let autoPlayInterval = null;
+let touchStartX = 0;
+let touchCurrentX = 0;
+let touchStartY = 0;
+let touchCurrentY = 0;
+let isSwipingTestimonials = false;
 
 function updateCarousel() {
     if (!testimonialsWrapper || testimonialCards.length === 0) return;
@@ -228,6 +234,56 @@ if (testimonialCards.length > 0) {
     document.addEventListener("keydown", (event) => {
         if (event.key === "ArrowLeft") goToSlide(currentSlide - 1);
         if (event.key === "ArrowRight") goToSlide(currentSlide + 1);
+    });
+
+    testimonialsWrapper.addEventListener(
+        "touchstart",
+        (event) => {
+            if (event.touches.length !== 1) return;
+
+            stopAutoplay();
+            touchStartX = event.touches[0].clientX;
+            touchCurrentX = touchStartX;
+            touchStartY = event.touches[0].clientY;
+            touchCurrentY = touchStartY;
+            isSwipingTestimonials = true;
+        },
+        { passive: true }
+    );
+
+    testimonialsWrapper.addEventListener(
+        "touchmove",
+        (event) => {
+            if (!isSwipingTestimonials || event.touches.length !== 1) return;
+            touchCurrentX = event.touches[0].clientX;
+            touchCurrentY = event.touches[0].clientY;
+        },
+        { passive: true }
+    );
+
+    testimonialsWrapper.addEventListener("touchend", () => {
+        if (!isSwipingTestimonials) return;
+
+        const deltaX = touchCurrentX - touchStartX;
+        const deltaY = Math.abs(touchCurrentY - touchStartY);
+        const swipeThreshold = 45;
+
+        isSwipingTestimonials = false;
+
+        if (Math.abs(deltaX) > swipeThreshold && Math.abs(deltaX) > deltaY) {
+            if (deltaX < 0) {
+                goToSlide(currentSlide + 1);
+            } else {
+                goToSlide(currentSlide - 1);
+            }
+        }
+
+        startAutoplay();
+    });
+
+    testimonialsWrapper.addEventListener("touchcancel", () => {
+        isSwipingTestimonials = false;
+        startAutoplay();
     });
 }
 

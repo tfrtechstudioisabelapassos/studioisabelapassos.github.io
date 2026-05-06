@@ -879,11 +879,13 @@ ul {
 
 .carousel-content {
     overflow: hidden;
+    touch-action: pan-y;
 }
 
 .testimonials-wrapper {
     display: flex;
     transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
 }
 
 .testimonial-card {
